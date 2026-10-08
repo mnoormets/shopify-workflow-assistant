@@ -112,5 +112,5 @@ def install(app,engine,clock,findings):
             before=serialize(row)
             changed=session.execute(update(Incident).where(Incident.incident_id==incident_id,Incident.revision==body.revision).values(status=body.status,owner=body.owner.strip(),revision=body.revision+1))
             if changed.rowcount!=1:raise HTTPException(409,'Concurrent incident change; refresh')
-            session.refresh(row);audit(session,row,'operator_update',body.actor,body.note,before)
+            session.refresh(row);audit(session,row,'operator_update',app.state.operator_identity or body.actor,body.note,before)
             return serialize(row)

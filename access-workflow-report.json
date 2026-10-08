@@ -1,0 +1,6 @@
+{
+  "wrong_key_rejected": true,
+  "login_and_audit_workflow": true,
+  "reload_requires_key": true,
+  "browser_storage_empty": true
+}

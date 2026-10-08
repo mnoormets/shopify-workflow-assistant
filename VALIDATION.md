@@ -61,4 +61,17 @@ evidence view, ownership update, note/revision write and audit persistence after
 page reload. No page errors. The source test is tests/ui_workflow.cjs; it refuses
 non-local URLs and writes only ignored data/ui-check artifacts. A screenshot was
 visually inspected for layout and readable workflow history. Operator identity
-remains a self-declared demo label, not authenticated attribution.
+is a self-declared label in demo mode. Protected mode is described below.
+
+
+## Protected operator checkpoint — 8 October 2026
+84 backend tests pass. Added missing/wrong-key rejection for reads and mutations,
+valid-key workflow, server-assigned audit identity despite a forged actor label,
+public health without secret disclosure, no-store headers, fail-closed invalid
+configuration and separate webhook signature enforcement. Frontend build passes.
+
+Isolated headless Chromium with a fresh context and temporary SQLite database:
+wrong key rejected; valid login and incident update completed; reload required a
+new key; localStorage/sessionStorage remained empty. The run used an ephemeral
+random process key, not a stored credential. See access-workflow-report.json and
+tests/ui_access.cjs. Shared-key identity is installation-level, not per-human.

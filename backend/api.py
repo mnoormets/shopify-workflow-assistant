@@ -1,5 +1,6 @@
 """Local read-only review application. No merchant API credentials or actions."""
 import hashlib
+import hmac
 import json
 import logging
 import os
@@ -8,7 +9,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, String, JSON, select
 from sqlalchemy.orm import Session
@@ -22,8 +23,11 @@ from .migrations import initialize
 
 ROOT = Path(__file__).resolve().parents[1]
 log = logging.getLogger("shopify_ops")
-def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=None, allowed_shop=None):
+def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=None, allowed_shop=None, operator_key=None):
     # Read only explicitly configured process settings; never load a .env file.
+    configured_key = operator_key if operator_key is not None else os.environ.get("SHOPIFY_OPS_OPERATOR_KEY")
+    if configured_key is not None and (not isinstance(configured_key, str) or len(configured_key) < 32 or configured_key.strip() != configured_key):
+        raise ValueError("Operator key must contain at least 32 characters and no surrounding whitespace")
     default = f"sqlite:///{ROOT / 'data' / 'orders.db'}"
     (ROOT / "data").mkdir(exist_ok=True)
     url = database_url or os.environ.get("SHOPIFY_OPS_DATABASE_URL", default)
@@ -36,14 +40,28 @@ def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=
     async def lifespan(app):
         yield
         engine.dispose()
-    app = FastAPI(title="Shopify Workflow Review", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(title="Shopify Workflow Review", version="0.4.0", lifespan=lifespan)
     app.state.engine = engine
+    # A shared key identifies this installation's operator, not an individual user.
+    app.state.operator_identity = "local-operator" if configured_key else None
+
+    @app.middleware("http")
+    async def operator_access(request, call_next):
+        public = request.url.path in {"/api/health", "/api/webhooks/shopify"}
+        if configured_key and request.url.path.startswith("/api/") and not public:
+            supplied = request.headers.get("X-Operator-Key", "")
+            if not hmac.compare_digest(supplied.encode("utf-8"), configured_key.encode("utf-8")):
+                return JSONResponse({"detail": "Operaatori ligipääsuvõti puudub või on vale."}, status_code=401, headers={"Cache-Control": "no-store"})
+        response = await call_next(request)
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
 
     install_event_routes(app, engine, clock, webhook_secret, allowed_shop)
 
     @app.get("/api/health")
     def health():
-        return {"status":"ok", "rule_version":RULE_VERSION, "ai_enabled":bool(os.environ.get("SHOPIFY_OPS_MODEL")), "mode":"synthetic_demo"}
+        return {"status":"ok", "rule_version":RULE_VERSION, "ai_enabled":bool(os.environ.get("SHOPIFY_OPS_MODEL")), "mode":"protected_local_review" if configured_key else "synthetic_demo", "operator_auth":bool(configured_key)}
 
     def read_policy(session):
         stored = session.get(StoredPolicy, "default")

@@ -217,3 +217,10 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE to a browser binary or SHOPIFY_UI_URL to another
 localhost port. The test creates synthetic records and operator notes; run it
 only against a demo. Screenshot/results go to ignored data/ui-check. The checked
 local run used a fresh headless context without the user's browser profile.
+
+
+Optional protected operator mode is now implemented: process-configured key,
+read/write API protection, in-memory UI login and server-assigned incident actor.
+See OPERATIONS.md for configuration and limits and VALIDATION.md for 84 passing
+backend tests plus the isolated browser check. Owner-approved store pilot and
+public deployment are still pending.
