@@ -1,0 +1,7 @@
+{
+  "dataset": "8 synthetic demo orders; not real merchant data",
+  "true_positives": 8,
+  "false_positives": 0,
+  "false_negatives": 0,
+  "exact_fixture_match": true
+}

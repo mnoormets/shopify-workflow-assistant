@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports: ["127.0.0.1:8770:8770"]
+    environment:
+      SHOPIFY_OPS_DATABASE_URL: postgresql+psycopg://demo:demo-only@db:5432/workflow
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo-only
+      POSTGRES_DB: workflow
+    volumes: ["orders-db:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d workflow"]
+      interval: 5s
+      retries: 10
+volumes:
+  orders-db:
