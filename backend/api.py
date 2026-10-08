@@ -17,6 +17,8 @@ from sqlalchemy.exc import IntegrityError
 from .domain import Order, ImportBatch, ReviewPolicy, evaluate, RULE_VERSION
 from .db import Base, StoredOrder, ImportRun, StoredPolicy
 from .events import install_event_routes
+from .incidents import install as install_incidents
+from .migrations import initialize
 
 ROOT = Path(__file__).resolve().parents[1]
 log = logging.getLogger("shopify_ops")
@@ -28,13 +30,13 @@ def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=
     kwargs = {"connect_args": {"check_same_thread": False}} if url.startswith("sqlite") else {}
     if url == "sqlite://": kwargs["poolclass"] = StaticPool
     engine = create_engine(url, **kwargs)
-    Base.metadata.create_all(engine)
+    initialize(engine)
     clock = clock or (lambda: datetime.now(timezone.utc))
     @asynccontextmanager
     async def lifespan(app):
         yield
         engine.dispose()
-    app = FastAPI(title="Shopify Workflow Review", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="Shopify Workflow Review", version="0.3.0", lifespan=lifespan)
     app.state.engine = engine
 
     install_event_routes(app, engine, clock, webhook_secret, allowed_shop)
@@ -92,6 +94,23 @@ def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=
     def demo():
         return import_orders(ImportBatch.model_validate(json.loads((ROOT/"fixtures/demo.json").read_text())),"demo-v1")
 
+    @app.post("/api/scenario")
+    def scenario():
+        from datetime import timedelta
+        anchor=clock().replace(minute=0,second=0,microsecond=0)
+        cases=[]
+        for index in range(120):
+            kind=index%8
+            row={"order_id":f"SCENARIO-{index:04}","created_at":(anchor-timedelta(hours=2)).isoformat(),"financial_status":"paid","fulfillment_status":"fulfilled","total":f"{20+index}.00","currency":"EUR","tracking_number":f"SYNTHETIC-{index:04}"}
+            if kind==0:row.update(created_at=(anchor-timedelta(hours=72)).isoformat(),fulfillment_status="unfulfilled",stock_status="insufficient")
+            if kind==1:row.update(financial_status="pending",provider_status="paid",fulfillment_status="unfulfilled",shipment_status="handed_over")
+            if kind==2:row.update(financial_status="refunded")
+            if kind==3:row.update(tracking_number="")
+            if kind==4:row.update(financial_status="pending",fulfillment_status="unfulfilled",created_at=(anchor-timedelta(hours=40)).isoformat())
+            cases.append(row)
+        result=import_orders(ImportBatch.model_validate({"orders":cases}),"scenario-"+anchor.strftime("%Y%m%d%H"))
+        return {**result,"scenario":"120 authored synthetic orders; five exception groups and three clean groups","anchor":anchor.isoformat()}
+
     def all_findings():
         now=clock()
         with Session(engine) as session:
@@ -102,6 +121,8 @@ def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=
         priority={"high":0,"medium":1,"low":2}
         found.sort(key=lambda f:(priority[f.severity],f.order_id,f.code))
         return found,count,now,policy
+
+    install_incidents(app,engine,clock,all_findings)
 
     @app.get("/api/findings")
     def findings(q: str=Query(default="",max_length=100), severity: str=Query(default="",pattern="^(high|medium|low|)$")):

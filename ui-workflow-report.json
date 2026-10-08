@@ -1,0 +1,15 @@
+{
+  "scenario_orders": 120,
+  "checks": [
+    "scenario import",
+    "incident sync",
+    "evidence view",
+    "owner assignment",
+    "operator note",
+    "revision update",
+    "audit persistence after reload"
+  ],
+  "page_errors": [],
+  "passed": true,
+  "scope": "Local synthetic scenario only. No merchant connection, auth proof or hosted production claim."
+}

@@ -47,3 +47,18 @@
 - Live synthetic event run: 2 processed, 1 stale; repeated run creates no events.
 - UI production build successful after event history/audit additions.
 - PostgreSQL locking code provided but not exercised; merchant integration still pending.
+
+## Incident operations — 8 October 2026
+69 tests pass, including repeated sync, invalid state transitions, stale revision
+rejection without extra audit records, detection clear/reactivation, clean scenario
+groups, list limits/literal wildcard filters, and legacy audit migration preserving
+notes. React production build passes. Existing audit-table upgrade failure was
+found during live end-to-end testing and repaired; the previous database was not
+removed. No external store or payment action was executed.
+
+Live isolated headless Chromium test passed: scenario import, incident sync,
+evidence view, ownership update, note/revision write and audit persistence after
+page reload. No page errors. The source test is tests/ui_workflow.cjs; it refuses
+non-local URLs and writes only ignored data/ui-check artifacts. A screenshot was
+visually inspected for layout and readable workflow history. Operator identity
+remains a self-declared demo label, not authenticated attribution.

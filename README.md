@@ -181,3 +181,39 @@ source timestamp ordering, transactional projection and before/after audit histo
 The UI has a synthetic event simulator. See INTEGRATION.md for supported payloads,
 worker commands, tested boundaries and prerequisites before a real merchant pilot.
 No Shopify credentials, real store connection or merchant writes are present.
+
+## Operations workspace
+The React dashboard now includes a persistent incident queue. Click **120
+ tellimusega tööpäev**, then **Uuenda juhtumeid leidudest**. Inspect a case, assign
+an owner, record the evidence checked, and move it to investigating. Only an
+investigating case can be marked resolved; reopening is explicit. A resolution
+is an operator record, not proof that Shopify or a payment provider was changed.
+
+Incident IDs are deterministic per order/rule. Observation updates preserve the
+operator's state. A rule no longer firing clears detection.active, without
+inventing a human resolution. Revision-checked compare-and-swap writes reject
+stale operator edits with HTTP 409. Each successful write and source-observation
+change appends before/after records in the same transaction. History is ordered by
+revision. List endpoints use bounded limits and literal order-ID filtering.
+
+New endpoints: POST /api/scenario, POST /api/incidents/sync, GET /api/incidents,
+GET /api/incidents/{id}, PATCH /api/incidents/{id}. OpenAPI includes strict inputs.
+A local schema upgrade adds audit revisions without discarding existing notes.
+The 120-order scenario includes five exception groups and three clean groups.
+No customer details or external merchant calls are used in the scenario.
+
+Operator labels in this local demo are self-declared, not authenticated identity.
+Free-text notes must contain only synthetic content. This is not a tamper-proof
+ledger. Authentication, permission enforcement, robust migration orchestration,
+backup/restore, retention and a merchant-approved pilot are deployment gates.
+PostgreSQL incident concurrency is implemented through conditional updates but
+has not been validated against a live PostgreSQL server.
+
+## Browser workflow verification
+Install Playwright separately in the project root (`npm install --no-save
+playwright`) and its Chromium (`npx playwright install chromium`). With this local
+app running, run `node tests/ui_workflow.cjs`. Optionally set
+PLAYWRIGHT_CHROMIUM_EXECUTABLE to a browser binary or SHOPIFY_UI_URL to another
+localhost port. The test creates synthetic records and operator notes; run it
+only against a demo. Screenshot/results go to ignored data/ui-check. The checked
+local run used a fresh headless context without the user's browser profile.
