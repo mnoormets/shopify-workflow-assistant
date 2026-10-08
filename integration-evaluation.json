@@ -1,0 +1,75 @@
+{
+  "first": {
+    "receipts": [
+      {
+        "event_id": "10000000-0000-0000-0000-000000000001",
+        "status": "pending",
+        "replayed": false
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000002",
+        "status": "pending",
+        "replayed": false
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000003",
+        "status": "pending",
+        "replayed": false
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000002",
+        "status": "pending",
+        "replayed": true
+      }
+    ],
+    "outcomes": [
+      {
+        "event_id": "10000000-0000-0000-0000-000000000001",
+        "order_id": "S-20dbd7c60f-998877",
+        "outcome": "processed"
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000002",
+        "order_id": "S-20dbd7c60f-998877",
+        "outcome": "processed"
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000003",
+        "order_id": "S-20dbd7c60f-998877",
+        "outcome": "stale"
+      }
+    ],
+    "note": "Synthetic local simulation; not a live Shopify integration."
+  },
+  "repeat": {
+    "receipts": [
+      {
+        "event_id": "10000000-0000-0000-0000-000000000001",
+        "status": "processed",
+        "replayed": true
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000002",
+        "status": "processed",
+        "replayed": true
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000003",
+        "status": "stale",
+        "replayed": true
+      },
+      {
+        "event_id": "10000000-0000-0000-0000-000000000002",
+        "status": "processed",
+        "replayed": true
+      }
+    ],
+    "outcomes": [],
+    "note": "Synthetic local simulation; not a live Shopify integration."
+  },
+  "counts": {
+    "processed": 2,
+    "stale": 1
+  },
+  "scope": "Local signed synthetic event simulation. No Shopify store connected."
+}

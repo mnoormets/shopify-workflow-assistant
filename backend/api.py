@@ -11,30 +11,16 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, String, JSON, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.exc import IntegrityError
 from .domain import Order, ImportBatch, ReviewPolicy, evaluate, RULE_VERSION
+from .db import Base, StoredOrder, ImportRun, StoredPolicy
+from .events import install_event_routes
 
 ROOT = Path(__file__).resolve().parents[1]
 log = logging.getLogger("shopify_ops")
-class Base(DeclarativeBase): pass
-class StoredOrder(Base):
-    __tablename__ = "orders"
-    order_id: Mapped[str] = mapped_column(String(60), primary_key=True)
-    payload: Mapped[dict] = mapped_column(JSON)
-class ImportRun(Base):
-    __tablename__ = "import_runs"
-    key: Mapped[str] = mapped_column(String(100), primary_key=True)
-    digest: Mapped[str] = mapped_column(String(64))
-    count: Mapped[str] = mapped_column(String(10))
-
-class StoredPolicy(Base):
-    __tablename__ = "review_policy"
-    policy_id: Mapped[str] = mapped_column(String(10), primary_key=True)
-    payload: Mapped[dict] = mapped_column(JSON)
-
-def create_app(database_url=None, clock=None, ai_transport=None):
+def create_app(database_url=None, clock=None, ai_transport=None, webhook_secret=None, allowed_shop=None):
     # Read only explicitly configured process settings; never load a .env file.
     default = f"sqlite:///{ROOT / 'data' / 'orders.db'}"
     (ROOT / "data").mkdir(exist_ok=True)
@@ -48,8 +34,10 @@ def create_app(database_url=None, clock=None, ai_transport=None):
     async def lifespan(app):
         yield
         engine.dispose()
-    app = FastAPI(title="Shopify Workflow Review", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Shopify Workflow Review", version="0.2.0", lifespan=lifespan)
     app.state.engine = engine
+
+    install_event_routes(app, engine, clock, webhook_secret, allowed_shop)
 
     @app.get("/api/health")
     def health():
