@@ -1,0 +1,10 @@
+{
+  "scope": "120 authored synthetic orders; no real-model or merchant accuracy claim",
+  "orders": 120,
+  "active_orders": 75,
+  "clean_orders": 45,
+  "cited_steps": 105,
+  "coverage_errors": [],
+  "passed": true,
+  "model_execution": "disabled; adversarial model-output contract tested separately in pytest"
+}

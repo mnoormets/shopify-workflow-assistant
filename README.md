@@ -19,7 +19,7 @@ synthetic; a merchant pilot has not been performed.
 - Optional local Ollama explanation; validated output falls back to rule explanations.
 - Eight-order demo and a 120-order synthetic operational scenario.
 
-**Verified:** 84 passing backend tests, React build and isolated browser checks for
+**Verified:** 96 passing backend tests, React build and isolated browser checks for
 incident persistence and protected login/edit/reload. GitHub Actions runs the tests
 and frontend build. [Validation](VALIDATION.md) records the actual test scope.
 
@@ -101,3 +101,15 @@ fulfilled orders are review candidates, not proof of an incorrect payment.
 Ollama must be installed/configured separately; JSON validation alone does not
 guarantee grounded prose. AI output remains a draft. Store connection, independent
 provider/carrier feeds and owner-approved operational testing are future work.
+
+## Evidence-linked investigation (9 October 2026)
+
+Open a finding and choose **Koosta uurimisplaan**. `POST /api/investigate/{order_id}` joins all current findings for the order, cites their exact structured evidence, states unknowns and provides a review checklist. A SHA256 snapshot binds the shown findings, policy and approved steps; it is not a source authenticity guarantee. Regenerate after data changes.
+
+Optional local Ollama can reorder approved step IDs only. Unknown IDs, duplicates, omitted steps, extra prose/facts and malformed responses are rejected. All displayed text comes from reviewed playbooks; model output cannot introduce a cause or charge/refund action. The older `/api/explain` endpoint remains an explicitly labelled free-text draft with weaker grounding guarantees; use the investigation plan for the constrained workflow.
+
+Verified here: 96 backend tests; 120 synthetic orders (75 flagged, 45 clean), 105 cited steps with no coverage/citation mismatch; React build; isolated headless UI check with no page errors. These are synthetic evaluations and mocked adversarial model outputs, **not live-model ranking quality or measured merchant savings**. See `investigation-evaluation.json`, `investigation-ui-report.json`, [pilot protocol](PILOT.md) and [interview practice](INTERVIEW.md).
+
+```sh
+python -m backend.evaluate_investigation
+```

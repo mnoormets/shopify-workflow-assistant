@@ -48,7 +48,7 @@
 - UI production build successful after event history/audit additions.
 - PostgreSQL locking code provided but not exercised; merchant integration still pending.
 
-## Incident operations — 8 October 2026
+## Incident operations â€” 8 October 2026
 69 tests pass, including repeated sync, invalid state transitions, stale revision
 rejection without extra audit records, detection clear/reactivation, clean scenario
 groups, list limits/literal wildcard filters, and legacy audit migration preserving
@@ -64,7 +64,7 @@ visually inspected for layout and readable workflow history. Operator identity
 is a self-declared label in demo mode. Protected mode is described below.
 
 
-## Protected operator checkpoint — 8 October 2026
+## Protected operator checkpoint â€” 8 October 2026
 84 backend tests pass. Added missing/wrong-key rejection for reads and mutations,
 valid-key workflow, server-assigned audit identity despite a forged actor label,
 public health without secret disclosure, no-store headers, fail-closed invalid
@@ -75,3 +75,7 @@ wrong key rejected; valid login and incident update completed; reload required a
 new key; localStorage/sessionStorage remained empty. The run used an ephemeral
 random process key, not a stored credential. See access-workflow-report.json and
 tests/ui_access.cjs. Shared-key identity is installation-level, not per-human.
+
+
+## Evidence-linked investigation — 9 October 2026
+96 tests passed; 12 added behavioral cases cover evidence links, unchanged stored findings, invented/missing/duplicate model steps and extra model facts, valid ranking, policy snapshot changes and protected access. Synthetic 120-order coverage evaluation passed:75 flagged,45 clean,105 cited steps. React build and isolated headless Chrome UI check passed with no page errors. Screenshot visually inspected. No live LLM or merchant pilot performed in this checkpoint.

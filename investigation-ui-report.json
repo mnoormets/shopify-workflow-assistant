@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "demo import",
+    "select finding",
+    "investigation plan",
+    "cited steps",
+    "unknowns",
+    "snapshot"
+  ],
+  "page_errors": [],
+  "scope": "isolated localhost synthetic demo; no real model"
+}
